@@ -1,38 +1,86 @@
-package blockchain;
+package  blockchain;
 
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 class Block {
     private int id;
     private long timestamp;
-    private  String hash;
+    private  String blockHash;
     private String previousHash;
+    private long magicNumber;
+    private int timeToGenerate;
 
-    public Block (int id, String previousHash){
+    public Block (int id, long timestamp, String previousHash){
         this.id = id;
-        this.timestamp = new Date().getTime();
+        this.timestamp = timestamp;
         this.previousHash = previousHash;
-        this.hash = calcHash();
+
+    }
+    public static Block getProved(int id, String prevBlockHash, int zeroes) {
+        final var startTime = Instant.now();
+        final var block = new Block(id, new Date().getTime(), prevBlockHash);
+        block.findMagicNumber(zeroes);
+        block.timeToGenerate = Math.toIntExact(Duration.between(startTime, Instant.now()).toSeconds());
+        return block;
     }
 
-    public int getId() {
-        return id;
+    public String getBlockHash() {
+        return blockHash;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+
+    private void findMagicNumber(int zeroes) {
+        final var random = new Random();
+        var hash = "";
+        do {
+            magicNumber = Math.abs(random.nextLong());
+            hash = StringUtil.applySha256(stringify());
+        } while (!isProved(zeroes, hash));
+        blockHash = hash;
     }
 
-    public String getPreviousHash() {
-        return previousHash;
+
+
+    private boolean isProved(int zeroes, String blockHash) {
+        for (int i = 0; i < zeroes; i++) {
+            if (blockHash.charAt(i) != '0') {
+                return false;
+            }
+        }
+        return true;
     }
 
-    public String getHash() {
-        return hash;
+    private String stringify() {
+        return "" +
+                id +
+                timestamp +
+                previousHash +
+                magicNumber;
     }
-
-    public String calcHash(){
-        return StringUtil.applySha256(Integer.toString(id) + Long.toString(timestamp) + previousHash);
+    @Override
+    public String toString() {
+        return String.format("Block: \n" +
+                        "Id: %d \n" +
+                        "Timestamp: %d \n" +
+                        "Magic number: %d \n" +
+                        "Hash of the previous block: \n" +
+                        "%s \n" +
+                        "Hash of the block: \n" +
+                        "%s \n" +
+                        "Block was generating for %d seconds",
+                id,
+                timestamp,
+                magicNumber,
+                previousHash,
+                blockHash,
+                timeToGenerate);
     }
 
 }
+
+
