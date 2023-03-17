@@ -1,29 +1,41 @@
 package blockchain;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 class BlockChain {
     private ArrayList<Block> blockChain;
+    private final int zeroes;
 
-    public BlockChain() {
-        blockChain = new ArrayList<>();
-        Block genesisBlock = new Block(1, "0");
-        blockChain.add(genesisBlock);
+    private BlockChain(int zeroes) {
+        this.blockChain = new ArrayList<>();
+        this.zeroes = zeroes;
     }
 
-    public void addBlockChain() {
-        Block latest = blockChain.get(blockChain.size() - 1);
-        Block newBlock = new Block(latest.getId() + 1, latest.getHash());
-        blockChain.add(newBlock);
+    private void addBlock() {
+        blockChain.add(Block.getProved(
+                blockChain.size(),
+                blockChain.isEmpty() ? "0" : blockChain.get(blockChain.size() - 1).getBlockHash(),
+                zeroes));
+
     }
-    public void printBlockchain() {
-        for (Block block : blockChain) {
-            System.out.println("Block:");
-            System.out.println("Id: " + block.getId());
-            System.out.println("Timestamp: " + block.getTimestamp());
-            System.out.println("Hash of the previous block: \n" + block.getPreviousHash());
-            System.out.println("Hash of the block: \n" + block.getHash() + "\n");
+
+    public void generateBlocks(int blocksNumber) {
+        for (var i = 0; i < blocksNumber; i++) {
+            addBlock();
         }
     }
 
+    public static BlockChain getInstance(int zeroes) {
+        return new BlockChain(zeroes);
+    }
+
+    @Override
+    public String toString() {
+        final var stringBuilder = new StringBuilder();
+        for (var block : blockChain) {
+            stringBuilder.append(block).append("\n\n");
+        }
+        return String.valueOf(stringBuilder);
+    }
 }
